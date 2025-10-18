@@ -44,7 +44,6 @@ Final edited demo video for submission (max 3 minutes).
 
 Targeting the following prizes:
 - Best Overall Hack
-- Best Use of TwelveLabs API
 - Best Use of Google Gemini API
 - Best Use of ElevenLabs API
 - Best Design
@@ -68,5 +67,6 @@ Targeting the following prizes:
 - Show key features clearly
 
 ## Team
+
 
 DevPost materials prepared by the REWIND core team.
