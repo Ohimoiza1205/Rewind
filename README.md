@@ -570,116 +570,6 @@ VoiceBridge™ is the multilingual narration system that enables users to hear s
 │              Audio Playback                           │
 │  User hears their voice speaking Spanish             │
 └──────────────────────────────────────────────────────┘
-```
-
-### Implementation
-
-#### Voice Cloning Setup
-
-```python
-# backend/app/services/elevenlabs_service.py
-from elevenlabs import VoiceSettings, clone
-
-async def clone_user_voice(audio_file: bytes, user_id: str) -> str:
-    """
-    Clone user's voice from audio sample.
-    
-    Args:
-        audio_file: Audio data (minimum 30 seconds)
-        user_id: Unique user identifier
-        
-    Returns:
-        voice_id: ElevenLabs voice identifier
-    """
-    voice = clone(
-        name=f"user_{user_id}_voice",
-        files=[audio_file],
-        description="User cloned voice for REWIND"
-    )
-    return voice.voice_id
-```
-
-#### Narration Generation
-
-```python
-# backend/app/api/routes/narration.py
-from app.services.gemini_service import translate_text
-from app.services.elevenlabs_service import synthesize_speech
-
-@router.post("/generate")
-async def generate_narration(
-    scene_id: str,
-    target_language: str,
-    user_id: str
-):
-    # 1. Retrieve scene description
-    scene = await get_scene(scene_id)
-    description = scene.description
-    
-    # 2. Translate if necessary
-    if target_language != "en":
-        description = await translate_text(description, target_language)
-    
-    # 3. Get user's voice ID
-    user = await get_user(user_id)
-    voice_id = user.voice_id
-    
-    # 4. Synthesize audio
-    audio_bytes = await synthesize_speech(
-        text=description,
-        voice_id=voice_id,
-        language=target_language
-    )
-    
-    # 5. Upload to storage
-    audio_url = await upload_audio(audio_bytes, f"{scene_id}_{target_language}.mp3")
-    
-    return {
-        "audio_url": audio_url,
-        "text": description,
-        "language": target_language
-    }
-```
-
-#### Frontend Integration
-
-```javascript
-// frontend/src/hooks/useNarration.js
-import { useState } from 'react';
-import { api } from '@/services/api';
-
-export function useNarration() {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-
-  const generateNarration = async (sceneId, language) => {
-    setIsGenerating(true);
-    
-    try {
-      const response = await api.post('/narration/generate', {
-        scene_id: sceneId,
-        target_language: language,
-        user_id: currentUser.id
-      });
-      
-      setAudioUrl(response.audio_url);
-      
-      // Auto-play narration
-      const audio = new Audio(response.audio_url);
-      await audio.play();
-      
-      return response;
-    } catch (error) {
-      console.error('Narration generation failed:', error);
-      throw error;
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  return { generateNarration, isGenerating, audioUrl };
-}
-```
 
 ### Supported Languages
 
@@ -926,7 +816,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ```
 MIT License
 
-Copyright (c) 2024 REWIND Team
+Copyright (c) 2025 REWIND Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -986,24 +876,25 @@ For questions, issues, or collaboration opportunities:
 
 ## Roadmap
 
-### Version 1.1 (Q1 2025)
+### Version 1.1 (Q4 2025)
 - Real-time collaborative viewing
 - Mobile application (iOS/Android)
 - Advanced scene editing capabilities
 - Integration with popular video platforms
 
-### Version 1.2 (Q2 2025)
+### Version 1.2 (Q1 2026)
 - VR/AR support for immersive viewing
 - AI-powered video summarization
 - Multi-speaker voice cloning
 - Enhanced privacy controls
 
-### Version 2.0 (Q3 2025)
+### Version 2.0 (Q2 2026)
 - Live streaming support with real-time processing
 - Professional video editing suite
 - Team collaboration features
 - Enterprise deployment options
 
 ---
+
 
 **Built with passion by the REWIND team. Transform how you experience video memories.**
