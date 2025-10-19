@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api.routes import health, analysis, scene_data, narration
 from app.api.routes.upload import router as upload_router
+from app.api.routes import pointcloud
 import logging
 
 logging.basicConfig(
@@ -28,6 +29,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix="/api", tags=["health"])
+app.include_router(pointcloud.router, prefix="/api", tags=["3D Point Clouds"])
 app.include_router(analysis.router, prefix="/api", tags=["analysis"])
 app.include_router(scene_data.router, prefix="/api", tags=["scenes"])
 app.include_router(narration.router, prefix="/api", tags=["narration"])

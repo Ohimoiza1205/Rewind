@@ -45,7 +45,8 @@ class FirebaseService:
             self.mock_data[video_id]['frame_urls'] = frame_urls
         return True
     
-    def store_pointcloud_urls(self, video_id: str, pointcloud_urls: List[str]) -> bool:
+    def store_pointcloud_urls(self, video_i
+    : str, pointcloud_urls: List[str]) -> bool:
         logger.info(f"[MOCK] Storing {len(pointcloud_urls)} point cloud URLs for {video_id}")
         if video_id in self.mock_data:
             self.mock_data[video_id]['pointcloud_urls'] = pointcloud_urls
@@ -56,6 +57,37 @@ class FirebaseService:
         if video_id in self.mock_data:
             del self.mock_data[video_id]
         return True
-
-
+    def get_video_analysis(self, video_id: str) -> Optional[Dict]:
+        """Get video analysis by video_id"""
+        try:
+            if self.mock_mode:
+                logger.info(f"[MOCK] Getting analysis for {video_id}")
+                return self.mock_data.get(f"mock_doc_{video_id}")
+            
+            docs = self.db.collection('video_analysis').where('video_id', '==', video_id).limit(1).stream()
+            for doc in docs:
+                return doc.to_dict()
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get analysis: {e}")
+            return None
+    def save_video_analysis(self, user_id: str, video_id: str, data: Dict) -> str:
+        """Save complete video analysis to Firestore"""
+        try:
+            if self.mock_mode:
+                logger.info(f"[MOCK] Saving analysis for {video_id}")
+                doc_id = f"mock_doc_{video_id}"
+                self.mock_data[doc_id] = data
+                return doc_id
+            
+            doc_ref = self.db.collection('video_analysis').document()
+            data['created_at'] = datetime.utcnow()
+            data['user_id'] = user_id
+            data['video_id'] = video_id
+            doc_ref.set(data)
+            logger.info(f"Saved analysis: {doc_ref.id}")
+            return doc_ref.id
+        except Exception as e:
+            logger.error(f"Failed to save analysis: {e}")
+            raise
 firebase_service = FirebaseService()

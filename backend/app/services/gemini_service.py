@@ -1,28 +1,67 @@
+import requests
 import logging
+from typing import Dict
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-class MockGeminiService:
-    """Mock Gemini service for demo"""
-    
-    def __init__(self):
-        logger.info("Gemini mock mode initialized")
-    
-    async def describe_scenes(self, scene_data):
-        """Mock scene descriptions"""
-        return [
-            "Here's Emma blowing out the candles on her fifth birthday cake surrounded by family and friends celebrating this special moment.",
-            "The excitement fills the room as everyone gathers around to sing Happy Birthday while the candles glow brightly."
-        ]
-    
-    async def translate_text(self, text: str, target_language: str):
-        """Mock translation"""
-        translations = {
-            "es": "Aquí está Emma soplando las velas de su pastel de quinto cumpleaños rodeada de familia y amigos celebrando este momento especial.",
-            "fr": "Voici Emma soufflant les bougies de son gâteau d'anniversaire entourée de sa famille et de ses amis célébrant ce moment spécial.",
-            "de": "Hier bläst Emma die Kerzen auf ihrer Geburtstagstorte aus, umgeben von Familie und Freunden, die diesen besonderen Moment feiern."
-        }
-        return translations.get(target_language, text)
 
-# Create instance
-gemini_service = MockGeminiService()
+def generate_scene_description(scene_data: Dict) -> str:
+    """
+    Generate natural language description of a video scene using Gemini.
+    
+    Args:
+        scene_data: Dictionary containing scene information
+            - timestamp: Scene timestamp
+            - objects: List of detected objects
+            - people: List of detected people
+            - transcript: Audio transcript
+    
+    Returns:
+        Natural language description of the scene
+    """
+    try:
+        timestamp = scene_data.get("timestamp", "unknown")
+        objects = scene_data.get("objects", [])
+        people = scene_data.get("people", [])
+        transcript = scene_data.get("transcript", "")
+        
+        prompt = f"""Generate a natural, engaging description of this video scene.
+
+Scene Details:
+- Timestamp: {timestamp}
+- Objects visible: {', '.join(objects) if objects else 'none detected'}
+- People: {', '.join(people) if people else 'none detected'}
+- Audio transcript: "{transcript if transcript else 'no audio'}"
+
+Create a brief, vivid description (2-3 sentences) that captures what's happening in this moment.
+Focus on the action, emotion, and context. Write in present tense."""
+
+        url = f"{settings.GEMINI_BASE_URL}/models/gemini-2.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "contents": [{
+                "parts": [{
+                    "text": prompt
+                }]
+            }]
+        }
+        
+        response = requests.post(url, json=data, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception(f"Gemini API error: {response.status_code}")
+        
+        result = response.json()
+        description = result["candidates"][0]["content"]["parts"][0]["text"]
+        
+        logger.info(f"Generated description for scene at {timestamp}")
+        return description.strip()
+        
+    except Exception as e:
+        logger.error(f"Error generating scene description: {str(e)}")
+        return f"Scene at {scene_data.get('timestamp', 'unknown')}: Unable to generate description"

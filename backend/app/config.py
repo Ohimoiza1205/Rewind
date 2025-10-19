@@ -9,8 +9,12 @@ load_dotenv()
 class Settings(BaseSettings):
     TL_API_KEY: str = Field(..., env="TL_API_KEY")
     TWELVELABS_API_KEY: str = Field(..., env="TWELVELABS_API_KEY")
+    
     GEMINI_API_KEY: str = Field(..., env="GEMINI_API_KEY")
+    GEMINI_BASE_URL: str = Field(default="https://generativelanguage.googleapis.com/v1beta", env="GEMINI_BASE_URL")
+    
     ELEVENLABS_API_KEY: str = Field(..., env="ELEVENLABS_API_KEY")
+    ELEVENLABS_DEFAULT_VOICE_ID: str = Field(default="21m00Tcm4TlvDq8ikWAM", env="ELEVENLABS_DEFAULT_VOICE_ID")
     
     CLOUDINARY_CLOUD_NAME: str = Field(..., env="CLOUDINARY_CLOUD_NAME")
     CLOUDINARY_API_KEY: str = Field(..., env="CLOUDINARY_API_KEY")
