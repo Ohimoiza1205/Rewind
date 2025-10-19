@@ -1,111 +1,28 @@
-import requests
-from app.config import settings
+import logging
 
-# Try gemini-1.5-flash-latest
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+logger = logging.getLogger(__name__)
 
-def generate_scene_description(scene_data: dict) -> str:
-    """Generate natural language description for a video scene"""
+class MockGeminiService:
+    """Mock Gemini service for demo"""
     
-    prompt = f"""
-    Based on this video scene data, create a natural, conversational description:
+    def __init__(self):
+        logger.info("Gemini mock mode initialized")
     
-    Timestamp: {scene_data.get('timestamp', 'Unknown')}
-    Objects detected: {', '.join(scene_data.get('objects', []))}
-    People: {', '.join(scene_data.get('people', []))}
-    Audio/Speech: {scene_data.get('transcript', 'No speech detected')}
+    async def describe_scenes(self, scene_data):
+        """Mock scene descriptions"""
+        return [
+            "Here's Emma blowing out the candles on her fifth birthday cake surrounded by family and friends celebrating this special moment.",
+            "The excitement fills the room as everyone gathers around to sing Happy Birthday while the candles glow brightly."
+        ]
     
-    Create a single sentence description like "This is [person] doing [action] during [context]"
-    Keep it natural and conversational.
-    """
-    
-    headers = {
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "contents": [{
-            "parts": [{
-                "text": prompt
-            }]
-        }]
-    }
-    
-    response = requests.post(
-        f"{GEMINI_API_URL}?key={settings.GEMINI_API_KEY}",
-        headers=headers,
-        json=payload
-    )
-    
-    if response.status_code == 200:
-        result = response.json()
-        return result['candidates'][0]['content']['parts'][0]['text']
-    else:
-        raise Exception(f"Gemini API error: {response.status_code} - {response.text}")
+    async def translate_text(self, text: str, target_language: str):
+        """Mock translation"""
+        translations = {
+            "es": "Aquí está Emma soplando las velas de su pastel de quinto cumpleaños rodeada de familia y amigos celebrando este momento especial.",
+            "fr": "Voici Emma soufflant les bougies de son gâteau d'anniversaire entourée de sa famille et de ses amis célébrant ce moment spécial.",
+            "de": "Hier bläst Emma die Kerzen auf ihrer Geburtstagstorte aus, umgeben von Familie und Freunden, die diesen besonderen Moment feiern."
+        }
+        return translations.get(target_language, text)
 
-def generate_object_caption(object_name: str, context: dict) -> str:
-    """Generate caption for a specific object in the scene"""
-    
-    prompt = f"""
-    Create a brief caption (1 sentence) for this object in a video:
-    
-    Object: {object_name}
-    Scene context: {context.get('description', 'A video scene')}
-    Timestamp: {context.get('timestamp', 'Unknown')}
-    
-    Make it natural and interesting, like you're explaining it to a friend.
-    """
-    
-    headers = {"Content-Type": "application/json"}
-    payload = {
-        "contents": [{
-            "parts": [{"text": prompt}]
-        }]
-    }
-    
-    response = requests.post(
-        f"{GEMINI_API_URL}?key={settings.GEMINI_API_KEY}",
-        headers=headers,
-        json=payload
-    )
-    
-    if response.status_code == 200:
-        result = response.json()
-        return result['candidates'][0]['content']['parts'][0]['text']
-    else:
-        raise Exception(f"Gemini API error: {response.status_code} - {response.text}")
-
-def answer_scene_question(scene_data: dict, question: str) -> str:
-    """Answer questions about what's happening in a scene"""
-    
-    prompt = f"""
-    Based on this video scene data:
-    
-    Objects: {scene_data.get('objects', [])}
-    People: {scene_data.get('people', [])}
-    Transcript: {scene_data.get('transcript', 'None')}
-    Timestamp: {scene_data.get('timestamp', 'Unknown')}
-    
-    Question: {question}
-    
-    Provide a clear, concise answer.
-    """
-    
-    headers = {"Content-Type": "application/json"}
-    payload = {
-        "contents": [{
-            "parts": [{"text": prompt}]
-        }]
-    }
-    
-    response = requests.post(
-        f"{GEMINI_API_URL}?key={settings.GEMINI_API_KEY}",
-        headers=headers,
-        json=payload
-    )
-    
-    if response.status_code == 200:
-        result = response.json()
-        return result['candidates'][0]['content']['parts'][0]['text']
-    else:
-        raise Exception(f"Gemini API error: {response.status_code} - {response.text}")
+# Create instance
+gemini_service = MockGeminiService()

@@ -3,8 +3,9 @@ from fastapi import APIRouter
 router = APIRouter()
 
 @router.get("/health")
-def health_check():
+async def health_check():
     return {
         "status": "healthy",
-        "message": "Rewind API is running"
+        "service": "rewind-api",
+        "version": "1.0.0"
     }

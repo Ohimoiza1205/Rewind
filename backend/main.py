@@ -27,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(health.router, tags=["health"])
+app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(analysis.router, prefix="/api", tags=["analysis"])
 app.include_router(scene_data.router, prefix="/api", tags=["scenes"])
 app.include_router(narration.router, prefix="/api", tags=["narration"])
