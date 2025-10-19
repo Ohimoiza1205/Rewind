@@ -1,7 +1,13 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
+from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
+    TL_API_KEY: str = Field(..., env="TL_API_KEY")
     TWELVELABS_API_KEY: str = Field(..., env="TWELVELABS_API_KEY")
     GEMINI_API_KEY: str = Field(..., env="GEMINI_API_KEY")
     ELEVENLABS_API_KEY: str = Field(..., env="ELEVENLABS_API_KEY")
@@ -25,3 +31,5 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 settings = Settings()
+
+Path(settings.TEMP_DIR).mkdir(parents=True, exist_ok=True)
