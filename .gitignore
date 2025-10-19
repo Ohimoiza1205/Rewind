@@ -57,3 +57,5 @@ depth-processing/test_videos/*
 # Logs
 *.log
 logs/
+backend/firebase-credentials.json
+*firebase*credentials*.json
