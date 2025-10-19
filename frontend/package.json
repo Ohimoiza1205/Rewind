@@ -30,5 +30,8 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.1",
     "vite": "^5.4.20"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.52.5"
   }
 }

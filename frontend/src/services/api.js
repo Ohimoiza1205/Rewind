@@ -35,4 +35,30 @@ export const api = {
     });
     return response.json();
   },
+
+  // NEW: Get depth processing status
+  async getDepthStatus(videoId) {
+    const response = await fetch(`${API_BASE_URL}/api/depth-status/${videoId}`);
+    return response.json();
+  },
+
+  // NEW: Get list of all processed videos
+  async getVideos() {
+    const response = await fetch(`${API_BASE_URL}/api/pointcloud/videos`);
+    return response.json();
+  },
+
+  // NEW: Get video metadata
+  async getVideoMetadata(videoName) {
+    const response = await fetch(`${API_BASE_URL}/api/pointcloud/metadata/${encodeURIComponent(videoName)}`);
+    return response.json();
+  },
+
+  // NEW: Get point cloud frame
+  async getPointCloudFrame(videoName, frameNumber) {
+    const response = await fetch(
+      `${API_BASE_URL}/api/pointcloud/frame/${encodeURIComponent(videoName)}/${frameNumber}`
+    );
+    return response.json();
+  },
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 
 const VideoUpload = ({ onUploadComplete }) => {
@@ -6,6 +6,7 @@ const VideoUpload = ({ onUploadComplete }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
   const [error, setError] = useState(null);
+  const [processingStatus, setProcessingStatus] = useState(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -28,11 +29,43 @@ const VideoUpload = ({ onUploadComplete }) => {
     try {
       const result = await api.uploadVideo(file);
       setUploadResult(result);
+      // Start polling for status
+      pollProcessingStatus(result.video_id);
     } catch (err) {
       setError(err.message);
     } finally {
       setUploading(false);
     }
+  };
+
+  const pollProcessingStatus = async (videoId) => {
+    const checkStatus = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/status/${videoId}`);
+        const data = await response.json();
+        
+        setProcessingStatus(data);
+        
+        if (data.status === 'complete') {
+          // Processing complete, stop polling
+          setTimeout(() => {
+            if (onUploadComplete) {
+              onUploadComplete(videoId);
+            }
+          }, 2000);
+        } else if (data.status === 'failed' || data.status === 'error') {
+          setError('Processing failed');
+        } else {
+          // Continue polling
+          setTimeout(checkStatus, 2000);
+        }
+      } catch (err) {
+        console.error('Status check failed:', err);
+        setTimeout(checkStatus, 2000);
+      }
+    };
+    
+    checkStatus();
   };
 
   const handleViewMemory = () => {
@@ -84,7 +117,7 @@ const VideoUpload = ({ onUploadComplete }) => {
                 <div className="w-full h-2 bg-deep-space rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-cosmic-purple to-accent-cyan animate-pulse w-3/4" />
                 </div>
-                <p className="text-center text-space-gray mt-2 text-sm">Processing your memory...</p>
+                <p className="text-center text-space-gray mt-2 text-sm">Uploading your memory...</p>
               </div>
             )}
           </>
@@ -109,8 +142,10 @@ const VideoUpload = ({ onUploadComplete }) => {
                   <span>Extracting video frames</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-cosmic-purple border-t-transparent rounded-full animate-spin mr-3" />
-                  <span className="text-space-gray">Generating 3D depth maps...</span>
+                  <div className={`w-5 h-5 mr-3 ${processingStatus?.progress > 0 ? 'border-2 border-cosmic-purple border-t-transparent rounded-full animate-spin' : 'border-2 border-space-gray rounded-full opacity-50'}`} />
+                  <span className={processingStatus?.progress > 0 ? 'text-white' : 'text-space-gray'}>
+                    Generating 3D depth maps... {processingStatus?.progress > 0 ? `${processingStatus.progress}%` : ''}
+                  </span>
                 </div>
                 <div className="flex items-center opacity-50">
                   <div className="w-5 h-5 border-2 border-space-gray rounded-full mr-3" />
@@ -121,19 +156,27 @@ const VideoUpload = ({ onUploadComplete }) => {
                   <span className="text-space-gray">Creating narration</span>
                 </div>
               </div>
+
+              {processingStatus?.status === 'complete' && (
+                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/50 rounded text-green-400 text-sm">
+                  Processing complete! Ready to view.
+                </div>
+              )}
             </div>
 
             <div className="flex gap-4">
               <button
                 onClick={handleViewMemory}
-                className="flex-1 btn-primary"
+                disabled={processingStatus?.status !== 'complete'}
+                className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                View 3D Memory Space
+                {processingStatus?.status === 'complete' ? 'View 3D Memory Space' : 'Processing...'}
               </button>
               <button
                 onClick={() => {
                   setUploadResult(null);
                   setFile(null);
+                  setProcessingStatus(null);
                 }}
                 className="flex-1 glassmorphic px-6 py-3 rounded-lg font-semibold hover:border-cosmic-purple transition-colors"
               >
